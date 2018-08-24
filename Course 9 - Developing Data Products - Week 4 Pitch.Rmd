@@ -1,0 +1,104 @@
+---
+title: "Course 9 - Developing Data Products - Week 4 Assignment 3 Pitch"
+author: "Leona288"
+date: "14 August 2018"
+output:
+  ioslides_presentation:
+    fig_caption: yes
+    fig_height: 3
+    fig_retina: 1
+    fig_width: 5
+    smaller: yes
+  slidy_presentation: default
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Reproducible Pitch Presentation Requirements
+
+- 5 slides (inclusive of the title slide) to pitch about the app. 
+- Create a web page using Slidify or Rstudio Presenter with an html5 slide deck.
+- Your presentation pushed to github or Rpubs
+- A link to your github or Rpubs presentation pasted into the provided text box
+
+## Introduction
+
+The data for the app is based on the mtcars data in R.
+The model provides the user with an interface to predict the miles per gallon based on the input on the weight of the car.
+
+How to use the app
+
+1. Select the weight of the car through moving the slider.
+2. Hit the "Submit" button after selection.
+3. The estimated miles per gallon based on the model is given in the text below the chart.
+4. There is an option to deselect the regression line.
+
+## The codes for the output to shiny are as follows:
+- ui.R (for user interface) that controls how it looks and
+- server.R that controls what it does.
+
+The link to the app is:
+https://github.com/leona288/Course-9---Developing-Data-Products
+
+##
+
+```{r, echo=FALSE}
+library(shiny)
+shinyUI(fluidPage(
+        titlePanel("Predict MPG from Weight"),
+        sidebarLayout(
+                sidebarPanel(
+                        sliderInput("sliderwt", "What is the weight of the car?", 1, 6, value = 3),
+                        checkboxInput("showModel1", "Show/Hide Model", value = TRUE),
+                        submitButton("Submit")
+                ),
+                mainPanel(
+                        plotOutput("plot1"),
+                        h6("Predicted MPG from Model:"),
+                        textOutput("pred1")
+                )
+        )
+))
+```
+
+
+```{r, echo=FALSE}
+library(shiny)
+shinyServer(function(input, output) {
+        mtcars$wtsp <- ifelse(mtcars$wt - 3 > 0, mtcars$mpg - 3, 0)
+        model1 <- lm(mpg ~ wt, data = mtcars)
+        
+        model1pred <- reactive({
+                wtInput <- input$sliderwt
+                predict(model1, newdata = data.frame(wt = wtInput))
+        })
+        
+        output$plot1 <- renderPlot({
+                wtInput <- input$sliderwt
+                
+                plot(mtcars$wt, mtcars$mpg, xlab = "Weight", 
+                     ylab = "Miles per Gallon", bty = "n", pch = 16,
+                     xlim = c(1, 6), ylim = c(10, 35))
+                if(input$showModel1){
+                        abline(model1, col = "red", lwd = 2)
+                }
+                legend(25, 250, "Model 1 Prediction", pch = 16, 
+                       col = "red", bty = "n", cex = 1.2)
+                points(wtInput, model1pred(), col = "red", pch = 16, cex = 2)
+        }, height = 200, width = 300)
+        
+        output$pred1 <- renderText({
+                model1pred()
+        })
+})
+
+
+
+```
+
+
+
+
